@@ -196,6 +196,27 @@ body {
   text-decoration: underline;
 }
 
+.input-group {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9CA3AF; /* Muted gray for the icon */
+  width: 20px;
+  height: 20px;
+  pointer-events: none; /* Make sure the icon isn't clickable */
+}
+
+.input-group .auth-input {
+  padding-left: 3rem; /* Make space for the icon */
+}
+
+
+
 /* =================================================================================
    MAIN APP LAYOUT
    ================================================================================= */
