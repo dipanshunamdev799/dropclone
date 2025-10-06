@@ -128,11 +128,6 @@ const Header = memo(({ onLogout }) => (
   </header>
 ));
 
-import {
-  // ... your other lucide imports
-  Mail, Lock, User, KeyRound // <-- Add these new icons
-} from 'lucide-react';
-
 
 const AuthForm = ({ onAuthSuccess }) => {
   const [view, setView] = useState('login'); // 'login', 'register', or 'verify'
