@@ -127,74 +127,150 @@ const Header = memo(({ onLogout }) => (
     </div>
   </header>
 ));
-
 const AuthForm = ({ onAuthSuccess }) => {
-  const [isRegister, setIsRegister] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  // 1. Replace 'isRegister' state with a more descriptive 'view' state
+  const [view, setView] = useState('login'); // 'login', 'register', or 'verify'
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  const [verificationCode, setVerificationCode] = useState('');
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-  const handleAuth = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    const endpoint = isRegister ? '/auth/register' : '/auth/login';
-    const payload = isRegister
-      ? { name: formData.name, email: formData.email, password: formData.password }
-      : { email: formData.email, password: formData.password };
+  // 2. Updated registration logic to switch to the 'verify' view
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      await apiClient('/auth/register', { 
+        body: { name: formData.name, email: formData.email, password: formData.password } 
+      });
+      toast.success('Registration successful! Please check your email for a verification code.');
+      setView('verify'); // Switch to verification view
+    } catch (error) {
+      toast.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const data = await apiClient('/auth/login', { 
+        body: { email: formData.email, password: formData.password } 
+      });
+      onAuthSuccess(data.token);
+      toast.success('Logged in successfully!');
+    } catch (error) {
+      toast.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    try {
-      const data = await apiClient(endpoint, { body: payload });
-      if (isRegister) {
-        toast.success('Registration successful! Please login.');
-        setIsRegister(false);
-        setFormData({ name: '', email: '', password: '' });
-      } else {
-        onAuthSuccess(data.token);
-        toast.success('Logged in successfully!');
-      }
-    } catch (error) {
-      toast.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // 3. New handler for submitting the verification code
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      await apiClient('/auth/verify', {
+        body: { email: formData.email, code: verificationCode }
+      });
+      toast.success('Email verified successfully! You can now log in.');
+      setView('login'); // Switch back to login view on success
+      setFormData({ name: '', email: formData.email, password: '' }); // Keep email for convenience
+    } catch (error) {
+      toast.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  return (
-    <div className="auth-page">
-      <div className="auth-form-container">
-        <div className="auth-header">
-          <div className="auth-logo-wrapper">
-            <FileText className="auth-logo-icon" />
-          </div>
-          <h1>DropClone</h1>
-          <p>Your secure cloud storage</p>
-        </div>
-        <form onSubmit={handleAuth} className="auth-form">
-          {isRegister && (
-            <input name="name" type="text" placeholder="Full Name" value={formData.name} onChange={handleInputChange} className="auth-input" required />
-          )}
-          <input name="email" type="email" placeholder="Email" value={formData.email} onChange={handleInputChange} className="auth-input" required />
-          <input name="password" type="password" placeholder="Password" value={formData.password} onChange={handleInputChange} className="auth-input" required />
-          <button type="submit" disabled={isLoading} className="auth-button">
-            {isLoading && <Loader2 className="spinner" />}
-            {isLoading ? (isRegister ? 'Registering...' : 'Logging in...') : (isRegister ? 'Register' : 'Login')}
-          </button>
-        </form>
-        <p className="auth-toggle-text">
-          {isRegister ? 'Already have an account?' : "Don't have an account?"}
-          <button onClick={() => setIsRegister(!isRegister)} className="auth-toggle-button">
-            {isRegister ? 'Login' : 'Register'}
-          </button>
-        </p>
-      </div>
-    </div>
-  );
+  // 4. New handler for resending the verification code
+  const handleResendCode = async () => {
+    const toastId = toast.loading('Resending code...');
+    try {
+      await apiClient('/auth/resend-verification', {
+        body: { email: formData.email }
+      });
+      toast.success('A new verification code has been sent.', { id: toastId });
+    } catch (error) {
+      toast.error(error, { id: toastId });
+    }
+  };
+
+  // 5. Conditional rendering for the new 'verify' view
+  if (view === 'verify') {
+    return (
+      <div className="auth-page">
+        <div className="auth-form-container">
+          <div className="auth-header">
+            <h1>Check Your Email</h1>
+            <p>We've sent a verification code to <strong>{formData.email}</strong></p>
+          </div>
+          <form onSubmit={handleVerify} className="auth-form">
+            <input 
+              name="verificationCode" 
+              type="text" 
+              placeholder="Verification Code" 
+              value={verificationCode} 
+              onChange={(e) => setVerificationCode(e.target.value)} 
+              className="auth-input" 
+              required 
+            />
+            <button type="submit" disabled={isLoading} className="auth-button">
+              {isLoading && <Loader2 className="spinner" />}
+              {isLoading ? 'Verifying...' : 'Verify Email'}
+            </button>
+          </form>
+          <p className="auth-toggle-text">
+            Didn't receive a code?
+            <button onClick={handleResendCode} className="auth-toggle-button">
+              Resend Code
+            </button>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const isRegister = view === 'register';
+
+  return (
+    <div className="auth-page">
+      <div className="auth-form-container">
+        <div className="auth-header">
+          <div className="auth-logo-wrapper">
+            <FileText className="auth-logo-icon" />
+          </div>
+          <h1>DropClone</h1>
+          <p>Your secure cloud storage</p>
+        </div>
+        <form onSubmit={isRegister ? handleRegister : handleLogin} className="auth-form">
+          {isRegister && (
+            <input name="name" type="text" placeholder="Full Name" value={formData.name} onChange={handleInputChange} className="auth-input" required />
+          )}
+          <input name="email" type="email" placeholder="Email" value={formData.email} onChange={handleInputChange} className="auth-input" required />
+          <input name="password" type="password" placeholder="Password" value={formData.password} onChange={handleInputChange} className="auth-input" required />
+          <button type="submit" disabled={isLoading} className="auth-button">
+            {isLoading && <Loader2 className="spinner" />}
+            {isLoading ? (isRegister ? 'Registering...' : 'Logging in...') : (isRegister ? 'Register' : 'Login')}
+          </button>
+        </form>
+        <p className="auth-toggle-text">
+          {isRegister ? 'Already have an account?' : "Don't have an account?"}
+          <button onClick={() => setView(isRegister ? 'login' : 'register')} className="auth-toggle-button">
+            {isRegister ? 'Login' : 'Register'}
+          </button>
+        </p>
+      </div>
+    </div>
+  );
 };
-
 const FileItem = memo(({ file, onDownload, onShare, onDelete }) => (
   <div className="file-item">
     <div className="file-info">
