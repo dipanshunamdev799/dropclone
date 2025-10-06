@@ -1,0 +1,777 @@
+# DropClone - Complete ASCII Architecture Diagrams
+
+---
+
+## 1. 🔭 UPPER VIEW (Bird's Eye View)
+
+```
+                                    ╔═══════════════════════════════════════════════════╗
+                                    ║              DROPCLONE CLOUD STORAGE              ║
+                                    ║                  AWS Infrastructure               ║
+                                    ╚═══════════════════════════════════════════════════╝
+                                                          │
+                ┌─────────────────────────────────────────┼─────────────────────────────────────────┐
+                │                                         │                                         │
+                ▼                                         ▼                                         ▼
+    ┏━━━━━━━━━━━━━━━━━━━┓                   ┏━━━━━━━━━━━━━━━━━━━┓                   ┏━━━━━━━━━━━━━━━━━━━┓
+    ┃   USER DEVICES    ┃                   ┃   AWS SERVICES    ┃                   ┃   INFRASTRUCTURE  ┃
+    ┃                   ┃                   ┃                   ┃                   ┃                   ┃
+    ┃ • Desktop (Web)   ┃◄─────────────────►┃ • S3 Storage      ┃◄─────────────────►┃ • EC2 Instance    ┃
+    ┃ • Mobile (Web)    ┃    HTTPS/API      ┃ • DynamoDB        ┃    AWS SDK v3     ┃ • Nginx Proxy     ┃
+    ┃ • Tablet (Web)    ┃                   ┃ • Cognito Auth    ┃                   ┃ • Node.js Backend ┃
+    ┃                   ┃                   ┃ • CloudWatch      ┃                   ┃ • React Frontend  ┃
+    ┗━━━━━━━━━━━━━━━━━━━┛                   ┗━━━━━━━━━━━━━━━━━━━┛                   ┗━━━━━━━━━━━━━━━━━━━┛
+           │                                         │                                         │
+           │                                         │                                         │
+           └─────────────────── INTERNET ────────────┴─────────────────────────────────────────┘
+                                    │
+                                    │
+                        ┌───────────┴───────────┐
+                        │   Security Layer      │
+                        │ • JWT Tokens          │
+                        │ • Presigned URLs      │
+                        │ • IAM Roles           │
+                        │ • CORS Policy         │
+                        └───────────────────────┘
+```
+
+---
+
+## 2. 🎨 FRONTEND ARCHITECTURE
+
+```
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                        REACT FRONTEND (Single Page Application)                         ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+                                           │
+                    ┌──────────────────────┼──────────────────────┐
+                    │                      │                      │
+                    ▼                      ▼                      ▼
+        ╔═══════════════════╗  ╔═══════════════════╗  ╔═══════════════════╗
+        ║   PRESENTATION    ║  ║   STATE MGMT      ║  ║   API SERVICES    ║
+        ║      LAYER        ║  ║                   ║  ║                   ║
+        ╚═══════════════════╝  ╚═══════════════════╝  ╚═══════════════════╝
+                 │                      │                      │
+    ┌────────────┴────────────┐        │         ┌────────────┴────────────┐
+    │                         │        │         │                         │
+    ▼                         ▼        ▼         ▼                         ▼
+┌─────────┐            ┌─────────┐  ┌────────┐  ┌──────────┐      ┌──────────┐
+│ Login/  │            │ File    │  │ React  │  │   Axios  │      │  Auth    │
+│ Register│            │ Upload  │  │useState│  │  Client  │      │ Service  │
+│ Page    │            │Component│  │useEff. │  │          │      │          │
+└─────────┘            └─────────┘  └────────┘  └──────────┘      └──────────┘
+     │                      │            │            │                  │
+     │                      │            │            │                  │
+┌────┴─────┐          ┌────┴─────┐  ┌───┴────┐   ┌───┴─────┐      ┌────┴─────┐
+│Dashboard │          │FileList  │  │ Local  │   │ HTTP     │      │  JWT     │
+│Component │          │Component │  │Storage │   │ Requests │      │  Token   │
+└──────────┘          └──────────┘  └────────┘   └──────────┘      └──────────┘
+     │                      │
+     │                      │
+┌────┴─────┐          ┌────┴─────┐
+│  Share   │          │ Download │
+│  Dialog  │          │ Handler  │
+└──────────┘          └──────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            STYLING LAYER                                    │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │   Tailwind   │  │    Lucide    │  │   Gradient   │  │   Responsive │  │
+│  │     CSS      │  │     Icons    │  │   Backgrounds│  │     Design   │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+                                ▼
+                    ┌───────────────────────┐
+                    │   BUILD PROCESS       │
+                    │  • npm run build      │
+                    │  • React Scripts      │
+                    │  • Bundle Optimization│
+                    └───────────────────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │  PRODUCTION OUTPUT    │
+                    │  /var/www/dropclone   │
+                    │  • index.html         │
+                    │  • static/js/*.js     │
+                    │  • static/css/*.css   │
+                    └───────────────────────┘
+```
+
+---
+
+## 3. ⚙️ BACKEND ARCHITECTURE
+
+```
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                    NODE.JS + EXPRESS BACKEND (Port 5000)                           ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+                                      │
+                 ┌────────────────────┼────────────────────┐
+                 │                    │                    │
+                 ▼                    ▼                    ▼
+    ╔═════════════════════╗  ╔═════════════════╗  ╔════════════════════╗
+    ║   MIDDLEWARE        ║  ║   ROUTES        ║  ║   AWS SDK v3       ║
+    ║                     ║  ║                 ║  ║   CLIENTS          ║
+    ╚═════════════════════╝  ╚═════════════════╝  ╚════════════════════╝
+             │                       │                     │
+    ┌────────┴────────┐     ┌────────┴────────┐  ┌────────┴────────┐
+    │                 │     │                 │  │                 │
+    ▼                 ▼     ▼                 ▼  ▼                 ▼
+┌─────────┐     ┌─────────┐ ┌──────┐   ┌──────┐ ┌────────┐  ┌─────────┐
+│  CORS   │     │  Auth   │ │ Auth │   │ Files│ │   S3   │  │Cognito  │
+│ Handler │     │Validate │ │Routes│   │Routes│ │ Client │  │ Client  │
+└─────────┘     └─────────┘ └──────┘   └──────┘ └────────┘  └─────────┘
+                     │            │          │         │           │
+┌─────────┐     ┌────┴────┐  ┌───┴──┐   ┌───┴──┐  ┌──┴───┐  ┌────┴────┐
+│  JSON   │     │  JWT    │  │Login │   │Upload│  │Delete│  │ SignUp  │
+│ Parser  │     │ Token   │  │      │   │      │  │Object│  │         │
+└─────────┘     │Verifier │  │Reg.  │   │List  │  │      │  │InitAuth │
+                └─────────┘  └──────┘   └──────┘  └──────┘  └─────────┘
+                                            │
+                                      ┌─────┴─────┐
+                                      │           │
+                                      ▼           ▼
+                                ┌─────────┐ ┌─────────┐
+                                │ Share   │ │Download │
+                                │ Routes  │ │ Routes  │
+                                └─────────┘ └─────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                        FILE UPLOAD PIPELINE                                │
+│                                                                            │
+│   Request  →  Multer  →  Multer-S3  →  S3 Upload  →  DynamoDB Metadata   │
+│     │            │           │              │               │             │
+│     ▼            ▼           ▼              ▼               ▼             │
+│  FormData   Validate    Stream to S3   Store File     Save to DB         │
+│            Check Size   (50MB max)     Get VersionID   Record Details     │
+└────────────────────────────────────────────────────────────────────────────┘
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                           AWS SDK v3 STRUCTURE                             ║
+╠════════════════════════════════════════════════════════════════════════════╣
+║                                                                            ║
+║  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐       ║
+║  │  S3Client        │  │  DynamoDBClient  │  │  CognitoClient   │       ║
+║  ├──────────────────┤  ├──────────────────┤  ├──────────────────┤       ║
+║  │ GetObjectCmd     │  │ PutCommand       │  │ SignUpCommand    │       ║
+║  │ PutObjectCmd     │  │ GetCommand       │  │ InitiateAuthCmd  │       ║
+║  │ DeleteObjectCmd  │  │ QueryCommand     │  │ GetUserCommand   │       ║
+║  │ ListVersionsCmd  │  │ UpdateCommand    │  │ ConfirmSignUpCmd │       ║
+║  └──────────────────┘  └──────────────────┘  └──────────────────┘       ║
+║           │                     │                      │                  ║
+║           └─────────────────────┴──────────────────────┘                  ║
+║                                 │                                         ║
+║                          ┌──────┴──────┐                                  ║
+║                          │   .send()   │                                  ║
+║                          └─────────────┘                                  ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │   ERROR HANDLING      │
+                    │  • Global Handler     │
+                    │  • 404 Handler        │
+                    │  • Validation Errors  │
+                    └───────────────────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │   RESPONSE FORMAT     │
+                    │  { success, data }    │
+                    │  { error, message }   │
+                    └───────────────────────┘
+```
+
+---
+
+## 4. 🏗️ COMPLETE GIANT ARCHITECTURE DIAGRAM
+
+```
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                    DROPCLONE - COMPLETE CLOUD STORAGE PLATFORM                                      ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+                                              ┌─── USERS ───┐
+                                              │             │
+                    ┌─────────────────────────┼─────────────┼─────────────────────────┐
+                    │                         │             │                         │
+                    ▼                         ▼             ▼                         ▼
+           ┌─────────────────┐      ┌─────────────────┐   ┌─────────────────┐  ┌─────────────────┐
+           │   💻 Desktop    │      │   📱 Mobile     │   │   🖥️ Tablet    │  │  🌐 Browser     │
+           │   (Chrome/FF)   │      │   (Safari/Ch)   │   │   (iPad/And)    │  │   (Any Modern)  │
+           └────────┬────────┘      └────────┬────────┘   └────────┬────────┘  └────────┬────────┘
+                    │                        │                     │                     │
+                    └────────────────────────┴─────────────────────┴─────────────────────┘
+                                              │
+                                              │ HTTPS (Port 80/443)
+                                              │
+                    ┌─────────────────────────┴─────────────────────────┐
+                    │                                                   │
+                    │        🌍 INTERNET / PUBLIC NETWORK               │
+                    │                                                   │
+                    └─────────────────────────┬─────────────────────────┘
+                                              │
+                                              ▼
+                    ╔═════════════════════════════════════════════════════╗
+                    ║         AWS EC2 INSTANCE (t2.micro)                 ║
+                    ║         IP: 65.0.45.247                             ║
+                    ║         Region: us-east-1                           ║
+                    ╚═════════════════════════════════════════════════════╝
+                                              │
+                    ┌─────────────────────────┼─────────────────────────┐
+                    │                         │                         │
+                    ▼                         ▼                         ▼
+         ┌──────────────────┐    ┌──────────────────┐     ┌──────────────────┐
+         │  🛡️ SECURITY     │    │  🔧 NGINX        │     │  📊 MONITORING   │
+         │  GROUP           │    │  Web Server      │     │  (PM2)           │
+         │                  │    │  (Port 80)       │     │                  │
+         │ • Port 22 (SSH)  │    │                  │     │ • Process Mgmt   │
+         │ • Port 80 (HTTP) │    │ Reverse Proxy    │     │ • Auto Restart   │
+         │ • Port 443(HTTPS)│    │ Load Balancer    │     │ • Log Rotation   │
+         └──────────────────┘    └────────┬─────────┘     └──────────────────┘
+                                           │
+                         ┌─────────────────┼─────────────────┐
+                         │                 │                 │
+                         ▼                 ▼                 ▼
+              ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+              │  📄 STATIC      │ │  🔌 API         │ │  📝 LOGS        │
+              │  CONTENT        │ │  PROXY          │ │  ACCESS/ERROR   │
+              │  /var/www/      │ │  /api/*         │ │  /var/log/nginx │
+              │  dropclone/     │ │  → :5000        │ └─────────────────┘
+              └────────┬────────┘ └────────┬────────┘
+                       │                   │
+                       │                   │
+                       ▼                   ▼
+         ┏━━━━━━━━━━━━━━━━━━━━┓  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+         ┃  REACT FRONTEND    ┃  ┃  NODE.JS BACKEND (Port 5000)     ┃
+         ┃  (Build Output)    ┃  ┃  Express.js + AWS SDK v3         ┃
+         ┗━━━━━━━━━━━━━━━━━━━━┛  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+                  │                           │
+         ┌────────┴────────┐         ┌────────┴────────────────────────┐
+         │                 │         │                                 │
+         ▼                 ▼         ▼                                 ▼
+    ┌─────────┐      ┌─────────┐  ┌──────────┐                 ┌──────────┐
+    │ index.  │      │ static/ │  │  Routes  │                 │Middleware│
+    │ html    │      │ assets  │  │          │                 │          │
+    └─────────┘      └─────────┘  │ • /auth  │                 │ • CORS   │
+                                   │ • /files │                 │ • Auth   │
+    ┌─────────┐      ┌─────────┐  │ • /share │                 │ • JSON   │
+    │  App    │      │  CSS/   │  │ • /stats │                 │ • Multer │
+    │  Logic  │      │  Images │  └──────────┘                 └──────────┘
+    └─────────┘      └─────────┘        │
+                                         │
+         ┌───────────────────────────────┼───────────────────────────────┐
+         │                               │                               │
+         ▼                               ▼                               ▼
+┌──────────────────┐          ┌──────────────────┐          ┌──────────────────┐
+│  🔐 AUTH         │          │  📦 FILE         │          │  🔗 SHARE        │
+│  ENDPOINTS       │          │  ENDPOINTS       │          │  ENDPOINTS       │
+│                  │          │                  │          │                  │
+│ POST /register   │          │ POST /upload     │          │ POST /share/:id  │
+│ POST /login      │          │ GET  /files      │          │ POST /unshare    │
+│ POST /verify     │          │ GET  /files/:id  │          │ GET  /public/:id │
+│ POST /resend     │          │ GET  /download   │          └──────────────────┘
+└────────┬─────────┘          │ DEL  /files/:id  │
+         │                    │ GET  /versions   │
+         │                    └────────┬─────────┘
+         │                             │
+         └─────────────────┬───────────┘
+                           │
+         ┌─────────────────┼─────────────────┐
+         │                 │                 │
+         ▼                 ▼                 ▼
+┏━━━━━━━━━━━━━━━━┓ ┏━━━━━━━━━━━━━━━━┓ ┏━━━━━━━━━━━━━━━━┓
+┃  AWS COGNITO   ┃ ┃   AWS S3       ┃ ┃  AWS DYNAMODB  ┃
+┃  User Pool     ┃ ┃   Bucket       ┃ ┃  Table         ┃
+┗━━━━━━━━━━━━━━━━┛ ┗━━━━━━━━━━━━━━━━┛ ┗━━━━━━━━━━━━━━━━┛
+         │                 │                 │
+    ┌────┴────┐       ┌────┴────┐       ┌────┴────┐
+    │         │       │         │       │         │
+    ▼         ▼       ▼         ▼       ▼         ▼
+┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐
+│ Users  │ │ JWT    │ │ Files  │ │Version │ │Metadata│ │ Queries│
+│ Table  │ │ Tokens │ │ Storage│ │ History│ │ Store  │ │ Index  │
+└────────┘ └────────┘ └────────┘ └────────┘ └────────┘ └────────┘
+    │         │           │           │         │           │
+    └─────────┴───────────┴───────────┴─────────┴───────────┘
+                              │
+                              ▼
+              ┌───────────────────────────────┐
+              │     SECURITY & IAM            │
+              ├───────────────────────────────┤
+              │ • IAM Roles for EC2           │
+              │ • S3 Bucket Policies          │
+              │ • Cognito User Pool Policies  │
+              │ • DynamoDB Access Policies    │
+              │ • JWT Token Validation        │
+              │ • Presigned URL Generation    │
+              └───────────────────────────────┘
+                              │
+                              ▼
+              ┌───────────────────────────────┐
+              │     DATA FLOW                 │
+              ├───────────────────────────────┤
+              │ 1. User Authenticates         │
+              │    └─→ Cognito validates      │
+              │    └─→ JWT token issued       │
+              │                               │
+              │ 2. File Upload Request        │
+              │    └─→ Token validated        │
+              │    └─→ File → S3              │
+              │    └─→ Metadata → DynamoDB    │
+              │                               │
+              │ 3. File Download Request      │
+              │    └─→ Token validated        │
+              │    └─→ Query DynamoDB         │
+              │    └─→ Generate presigned URL │
+              │    └─→ User downloads from S3 │
+              │                               │
+              │ 4. Share File                 │
+              │    └─→ Create presigned URL   │
+              │    └─→ Update DynamoDB status │
+              │    └─→ Return shareable link  │
+              └───────────────────────────────┘
+                              │
+                              ▼
+              ┌───────────────────────────────┐
+              │     ADDITIONAL SERVICES       │
+              ├───────────────────────────────┤
+              │ 📊 CloudWatch Logs            │
+              │    └─→ Application Logs       │
+              │    └─→ Access Logs            │
+              │    └─→ Error Tracking         │
+              │                               │
+              │ 🔔 SNS (Optional)             │
+              │    └─→ Email Notifications    │
+              │    └─→ Alert System           │
+              │                               │
+              │ 📈 CloudWatch Metrics         │
+              │    └─→ API Performance        │
+              │    └─→ S3 Storage Used        │
+              │    └─→ DynamoDB Throughput    │
+              └───────────────────────────────┘
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                            TECH STACK SUMMARY                              ║
+╠════════════════════════════════════════════════════════════════════════════╣
+║  Frontend:  React.js, Tailwind CSS, Lucide Icons, Axios                   ║
+║  Backend:   Node.js, Express.js, AWS SDK v3, Multer, JWT                  ║
+║  Storage:   AWS S3 (versioning enabled)                                   ║
+║  Database:  AWS DynamoDB (NoSQL)                                          ║
+║  Auth:      AWS Cognito (User Pool)                                       ║
+║  Server:    AWS EC2 (Ubuntu), Nginx, PM2                                  ║
+║  Tools:     Git, npm, AWS CLI, curl                                       ║
+╚════════════════════════════════════════════════════════════════════════════╝
+```
+
+---
+
+# DropClone - System Architecture (Layered View)
+
+```
+╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                               ║
+║                          DROPCLONE CLOUD STORAGE - LAYERED ARCHITECTURE                       ║
+║                                                                                               ║
+╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                                                               ┃
+┃  LAYER 1: CLIENT/PRESENTATION LAYER                                                          ┃
+┃  Purpose: User Interface & User Experience                                                   ┃
+┃                                                                                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+                         ┌──────────────────────────────────────────┐
+                         │         USER INTERFACE DEVICES           │
+                         └──────────────────────────────────────────┘
+                                             │
+                    ┌────────────────────────┼────────────────────────┐
+                    │                        │                        │
+                    ▼                        ▼                        ▼
+            ┌───────────────┐       ┌───────────────┐       ┌───────────────┐
+            │   💻 Desktop  │       │   📱 Mobile   │       │  🖥️ Tablet    │
+            │   Browsers    │       │   Browsers    │       │   Browsers    │
+            │               │       │               │       │               │
+            │ • Chrome      │       │ • Safari      │       │ • iPad OS     │
+            │ • Firefox     │       │ • Chrome      │       │ • Android     │
+            │ • Edge        │       │ • Firefox     │       │ • Windows     │
+            │ • Safari      │       │               │       │               │
+            └───────────────┘       └───────────────┘       └───────────────┘
+                    │                        │                        │
+                    └────────────────────────┴────────────────────────┘
+                                             │
+                                             ▼
+                         ┌──────────────────────────────────────────┐
+                         │        REACT SINGLE PAGE APP             │
+                         │                                          │
+                         │  ┌────────────────────────────────────┐  │
+                         │  │    UI COMPONENTS                   │  │
+                         │  │                                    │  │
+                         │  │  ┌──────────┐    ┌──────────┐    │  │
+                         │  │  │  Login   │    │Dashboard │    │  │
+                         │  │  │  Page    │    │   View   │    │  │
+                         │  │  └──────────┘    └──────────┘    │  │
+                         │  │                                    │  │
+                         │  │  ┌──────────┐    ┌──────────┐    │  │
+                         │  │  │File List │    │  Share   │    │  │
+                         │  │  │Component │    │  Dialog  │    │  │
+                         │  │  └──────────┘    └──────────┘    │  │
+                         │  │                                    │  │
+                         │  │  ┌──────────┐    ┌──────────┐    │  │
+                         │  │  │  Upload  │    │ Download │    │  │
+                         │  │  │  Modal   │    │ Handler  │    │  │
+                         │  │  └──────────┘    └──────────┘    │  │
+                         │  └────────────────────────────────────┘  │
+                         │                                          │
+                         │  ┌────────────────────────────────────┐  │
+                         │  │    STATE MANAGEMENT                │  │
+                         │  │                                    │  │
+                         │  │  • React Hooks (useState/Effect)   │  │
+                         │  │  • Local Storage (JWT tokens)      │  │
+                         │  │  • Component State                 │  │
+                         │  │  • Form Validation                 │  │
+                         │  └────────────────────────────────────┘  │
+                         │                                          │
+                         │  ┌────────────────────────────────────┐  │
+                         │  │    STYLING & DESIGN                │  │
+                         │  │                                    │  │
+                         │  │  • Tailwind CSS Utilities          │  │
+                         │  │  • Lucide React Icons              │  │
+                         │  │  • Responsive Design               │  │
+                         │  │  • Gradient Backgrounds            │  │
+                         │  └────────────────────────────────────┘  │
+                         └──────────────────────────────────────────┘
+                                             │
+                                             │ HTTP/HTTPS
+                                             │ REST API Calls
+                                             ▼
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                                                               ┃
+┃  LAYER 2: API CLIENT LAYER                                                                   ┃
+┃  Purpose: HTTP Communication & Request Management                                            ┃
+┃                                                                                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+                         ┌──────────────────────────────────────────┐
+                         │         AXIOS HTTP CLIENT                │
+                         │                                          │
+                         │  Base URL: /api                          │
+                         │  Timeout: 30s                            │
+                         │  Headers: Authorization, Content-Type    │
+                         └──────────────────────────────────────────┘
+                                             │
+                    ┌────────────────────────┼────────────────────────┐
+                    │                        │                        │
+                    ▼                        ▼                        ▼
+            ┌───────────────┐       ┌───────────────┐       ┌───────────────┐
+            │ Auth Service  │       │ File Service  │       │ Share Service │
+            │               │       │               │       │               │
+            │ • register()  │       │ • upload()    │       │ • create()    │
+            │ • login()     │       │ • list()      │       │ • revoke()    │
+            │ • verify()    │       │ • download()  │       │ • getLink()   │
+            │ • resend()    │       │ • delete()    │       │               │
+            │               │       │ • versions()  │       │               │
+            └───────────────┘       └───────────────┘       └───────────────┘
+                    │                        │                        │
+                    └────────────────────────┴────────────────────────┘
+                                             │
+                         ┌──────────────────────────────────────────┐
+                         │       REQUEST INTERCEPTORS               │
+                         │                                          │
+                         │  • Add JWT Token to headers              │
+                         │  • Handle token expiration               │
+                         │  • Retry failed requests                 │
+                         │  • Format request data                   │
+                         └──────────────────────────────────────────┘
+                                             │
+                         ┌──────────────────────────────────────────┐
+                         │       RESPONSE INTERCEPTORS              │
+                         │                                          │
+                         │  • Parse response data                   │
+                         │  • Handle errors globally                │
+                         │  • Refresh tokens if needed              │
+                         │  • Log API calls (dev mode)              │
+                         └──────────────────────────────────────────┘
+                                             │
+                                             │ HTTPS
+                                             ▼
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                                                               ┃
+┃  LAYER 3: WEB SERVER / REVERSE PROXY LAYER                                                   ┃
+┃  Purpose: Request Routing, Load Balancing, SSL Termination                                   ┃
+┃                                                                                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+                         ┌──────────────────────────────────────────┐
+                         │     NGINX WEB SERVER (Port 80/443)       │
+                         │                                          │
+                         │  Version: 1.24.0                         │
+                         │  Workers: Auto                           │
+                         │  Connections: 1024                       │
+                         └──────────────────────────────────────────┘
+                                             │
+                    ┌────────────────────────┼────────────────────────┐
+                    │                        │                        │
+                    ▼                        ▼                        ▼
+            ┌───────────────┐       ┌───────────────┐       ┌───────────────┐
+            │  Static Files │       │  API Proxy    │       │  WebSocket    │
+            │  Routing      │       │  Routing      │       │  (Optional)   │
+            │               │       │               │       │               │
+            │  location /   │       │ location /api │       │ location /ws  │
+            │  {            │       │ {             │       │ {             │
+            │    root /var/ │       │   proxy_pass  │       │   proxy_pass  │
+            │    www/       │       │   http://     │       │   http://     │
+            │    dropclone; │       │   :5000;      │       │   :5000;      │
+            │  }            │       │ }             │       │ }             │
+            └───────────────┘       └───────────────┘       └───────────────┘
+                    │                        │                        │
+                    └────────────────────────┴────────────────────────┘
+                                             │
+                         ┌──────────────────────────────────────────┐
+                         │     NGINX CAPABILITIES                   │
+                         │                                          │
+                         │  • SSL/TLS Termination                   │
+                         │  • Gzip Compression                      │
+                         │  • Static File Caching                   │
+                         │  • Rate Limiting                         │
+                         │  • Request Buffering                     │
+                         │  • Access Logging                        │
+                         │  • Error Logging                         │
+                         │  • CORS Headers                          │
+                         │  • Client Max Body: 50MB                 │
+                         └──────────────────────────────────────────┘
+                                             │
+                                             │ HTTP (localhost)
+                                             ▼
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                                                               ┃
+┃  LAYER 4: APPLICATION SERVER LAYER                                                           ┃
+┃  Purpose: Business Logic, Request Processing, Route Handling                                 ┃
+┃                                                                                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+                         ┌──────────────────────────────────────────┐
+                         │    NODE.JS + EXPRESS.JS (Port 5000)      │
+                         │                                          │
+                         │    Runtime: Node.js v18                  │
+                         │    Framework: Express v4                 │
+                         │    Process Manager: PM2                  │
+                         └──────────────────────────────────────────┘
+                                             │
+                         ┌──────────────────────────────────────────┐
+                         │         MIDDLEWARE PIPELINE              │
+                         │                                          │
+                         │  Request → CORS → JSON Parser →          │
+                         │  Auth Check → Route Handler → Response   │
+                         └──────────────────────────────────────────┘
+                                             │
+                    ┌────────────────────────┼────────────────────────┐
+                    │                        │                        │
+                    ▼                        ▼                        ▼
+    ┌─────────────────────────┐  ┌─────────────────────────┐  ┌─────────────────────────┐
+    │   AUTH ROUTES           │  │   FILE ROUTES           │  │   SHARE ROUTES          │
+    │                         │  │                         │  │                         │
+    │ POST /auth/register     │  │ POST /files/upload      │  │ POST /files/share/:id   │
+    │ POST /auth/login        │  │ GET  /files             │  │ POST /files/unshare/:id │
+    │ POST /auth/verify       │  │ GET  /files/:id         │  │                         │
+    │ POST /auth/resend       │  │ GET  /files/download/:id│  │                         │
+    │                         │  │ DELETE /files/:id       │  │                         │
+    │ ┌─────────────────────┐ │  │ GET  /files/:id/versions│  │ ┌─────────────────────┐ │
+    │ │   Controllers:      │ │  │                         │  │ │   Controllers:      │ │
+    │ │                     │ │  │ ┌─────────────────────┐ │  │ │                     │ │
+    │ │ • registerUser()    │ │  │ │   Controllers:      │ │  │ │ • createShare()     │ │
+    │ │ • loginUser()       │ │  │ │                     │ │  │ │ • revokeShare()     │ │
+    │ │ • verifyEmail()     │ │  │ │ • uploadFile()      │ │  │ │                     │ │
+    │ │ • resendCode()      │ │  │ │ • listFiles()       │ │  │ │                     │ │
+    │ │                     │ │  │ │ • getFile()         │ │  │ │                     │ │
+    │ └─────────────────────┘ │  │ │ • downloadFile()    │ │  │ └─────────────────────┘ │
+    └─────────────────────────┘  │ │ • deleteFile()      │ │  └─────────────────────────┘
+                                 │ │ • getVersions()     │ │
+                                 │ └─────────────────────┘ │
+                                 └─────────────────────────┘
+                    │                        │                        │
+                    └────────────────────────┴────────────────────────┘
+                                             │
+                         ┌──────────────────────────────────────────┐
+                         │      MIDDLEWARE COMPONENTS               │
+                         │                                          │
+                         │  ┌────────────────────────────────────┐  │
+                         │  │  authenticateToken()               │  │
+                         │  │  • Extracts JWT from header        │  │
+                         │  │  • Validates with Cognito          │  │
+                         │  │  • Sets req.userId                 │  │
+                         │  └────────────────────────────────────┘  │
+                         │                                          │
+                         │  ┌────────────────────────────────────┐  │
+                         │  │  Multer File Upload                │  │
+                         │  │  • Intercepts multipart data       │  │
+                         │  │  • Streams to S3 via multer-s3     │  │
+                         │  │  • 50MB size limit                 │  │
+                         │  └────────────────────────────────────┘  │
+                         │                                          │
+                         │  ┌────────────────────────────────────┐  │
+                         │  │  Error Handlers                    │  │
+                         │  │  • 404 Handler                     │  │
+                         │  │  • Global Error Handler            │  │
+                         │  │  • Validation Errors               │  │
+                         │  └────────────────────────────────────┘  │
+                         └──────────────────────────────────────────┘
+                                             │
+                                             │ AWS SDK Calls
+                                             ▼
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                                                               ┃
+┃  LAYER 5: DATA ACCESS / SERVICE LAYER                                                        ┃
+┃  Purpose: AWS Service Integration, Data Operations                                           ┃
+┃                                                                                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+                         ┌──────────────────────────────────────────┐
+                         │         AWS SDK v3 CLIENTS               │
+                         │                                          │
+                         │  Region: us-east-1                       │
+                         │  Credentials: IAM Role / Environment     │
+                         └──────────────────────────────────────────┘
+                                             │
+                    ┌────────────────────────┼────────────────────────┐
+                    │                        │                        │
+                    ▼                        ▼                        ▼
+    ┌─────────────────────────┐  ┌─────────────────────────┐  ┌─────────────────────────┐
+    │   S3Client              │  │   DynamoDBDocClient     │  │   CognitoClient         │
+    │                         │  │                         │  │                         │
+    │ @aws-sdk/client-s3      │  │ @aws-sdk/lib-dynamodb   │  │ @aws-sdk/client-        │
+    │                         │  │                         │  │ cognito-identity-       │
+    │                         │  │                         │  │ provider                │
+    │ Commands:               │  │ Commands:               │  │                         │
+    │                         │  │                         │  │ Commands:               │
+    │ • PutObjectCommand      │  │ • PutCommand            │  │                         │
+    │   └→ Upload files       │  │   └→ Create records     │  │ • SignUpCommand         │
+    │                         │  │                         │  │   └→ Register users     │
+    │ • GetObjectCommand      │  │ • GetCommand            │  │                         │
+    │   └→ Retrieve files     │  │   └→ Fetch records      │  │ • InitiateAuthCommand   │
+    │   └→ Presigned URLs     │  │                         │  │   └→ User login         │
+    │                         │  │ • QueryCommand          │  │                         │
+    │ • DeleteObjectCommand   │  │   └→ List user files    │  │ • GetUserCommand        │
+    │   └→ Remove files       │  │                         │  │   └→ Validate tokens    │
+    │                         │  │ • UpdateCommand         │  │                         │
+    │ • ListObjectVersions    │  │   └→ Update metadata    │  │ • ConfirmSignUpCommand  │
+    │   └→ File versions      │  │   └→ Download counts    │  │   └→ Verify email       │
+    │                         │  │                         │  │                         │
+    │ • getSignedUrl()        │  │ • DeleteCommand         │  │ • ResendConfirmation    │
+    │   └→ Shareable links    │  │   └→ Remove records     │  │   └→ Resend codes       │
+    └─────────────────────────┘  └─────────────────────────┘  └─────────────────────────┘
+                    │                        │                        │
+                    └────────────────────────┴────────────────────────┘
+                                             │
+                         ┌──────────────────────────────────────────┐
+                         │       COMMAND EXECUTION PATTERN          │
+                         │                                          │
+                         │  const command = new XxxCommand({...})   │
+                         │  const result = await client.send(cmd)   │
+                         │                                          │
+                         │  Benefits:                               │
+                         │  • Type safety                           │
+                         │  • Modular imports                       │
+                         │  • Tree-shaking                          │
+                         │  • Better error handling                 │
+                         └──────────────────────────────────────────┘
+                                             │
+                         ┌──────────────────────────────────────────┐
+                         │       HELPER SERVICES                    │
+                         │                                          │
+                         │  • Presigned URL Generator               │
+                         │  • File Upload Streamer                  │
+                         │  • Metadata Formatter                    │
+                         │  • Error Mapper (AWS → HTTP)             │
+                         └──────────────────────────────────────────┘
+                                             │
+                                             │ AWS API Calls
+                                             ▼
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                                                               ┃
+┃  LAYER 6: DATA STORAGE / PERSISTENCE LAYER                                                   ┃
+┃  Purpose: Data Storage, User Management, File Storage                                        ┃
+┃                                                                                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+    ┌─────────────────────────┐  ┌─────────────────────────┐  ┌─────────────────────────┐
+    │   AWS S3                │  │   AWS DynamoDB          │  │   AWS Cognito           │
+    │   Object Storage        │  │   NoSQL Database        │  │   User Authentication   │
+    │                         │  │                         │  │                         │
+    │ Bucket:                 │  │ Table:                  │  │ User Pool:              │
+    │ dropclone-storage-      │  │ dropclone-files         │  │ dropclone-users         │
+    │ bucket                  │  │                         │  │                         │
+    │                         │  │ Schema:                 │  │ Configuration:          │
+    │ Structure:              │  │                         │  │                         │
+    │ /                       │  │ Partition Key:          │  │ • Email Verification    │
+    │ └─ userId/              │  │   userId (String)       │  │ • Password Policy:      │
+    │    └─ fileId-name.ext   │  │                         │  │   - Min 8 chars         │
+    │                         │  │ Sort Key:               │  │   - Uppercase           │
+    │ Features:               │  │   fileId (String)       │  │   - Lowercase           │
+    │ • Versioning: ENABLED   │  │                         │  │   - Number              │
+    │ • Encryption: AES-256   │  │ Attributes:             │  │                         │
+    │ • Lifecycle Rules       │  │ • fileName (String)     │  │ • MFA: Optional         │
+    │ • CORS: Configured      │  │ • fileSize (Number)     │  │ • OAuth: Not configured │
+    │ • Public Access: BLOCK  │  │ • s3Key (String)        │  │                         │
+    │                         │  │ • s3Location (String)   │  │ User Attributes:        │
+    │ Access Control:         │  │ • versionId (String)    │  │ • email (required)      │
+    │ • IAM Policies          │  │ • mimeType (String)     │  │ • name (required)       │
+    │ • Presigned URLs        │  │ • uploadDate (String)   │  │ • sub (user ID)         │
+    │ • Bucket Policies       │  │ • isPublic (Boolean)    │  │                         │
+    │                         │  │ • downloadCount (Number)│  │ Tokens:                 │
+    │ Storage Class:          │  │ • shareUrl (String)     │  │ • Access: 1 hour        │
+    │ • STANDARD (default)    │  │ • shareExpiry (String)  │  │ • ID: 1 hour            │
+    │ • IA (Infrequent)       │  │ • lastShared (String)   │  │ • Refresh: 30 days      │
+    │ • Glacier (Archive)     │  │                         │  │                         │
+    │                         │  │ Indexes:                │  │ Security:               │
+    │ Versioning:             │  │ • None (using keys)     │  │ • SRP Protocol          │
+    │ • Keeps all versions    │  │                         │  │ • JWT signing           │
+    │ • Can restore           │  │ Capacity:               │  │ • Secure password hash  │
+    │ • Version IDs tracked   │  │ • On-Demand Billing     │  │                         │
+    └─────────────────────────┘  │ • Auto-scaling          │  └─────────────────────────┘
+                                 │                         │
+                                 │ Performance:            │
+                                 │ • Single-digit ms reads │
+                                 │ • Consistent writes     │
+                                 │                         │
+                                 │ Backup:                 │
+                                 │ • Point-in-time recovery│
+                                 │ • On-demand backups     │
+                                 └─────────────────────────┘
+                    │                        │                        │
+                    └────────────────────────┴────────────────────────┘
+                                             │
+                         ┌──────────────────────────────────────────┐
+                         │     CROSS-SERVICE INTEGRATION            │
+                         │                                          │
+                         │  S3 ←→ DynamoDB:                         │
+                         │  • File upload → metadata stored         │
+                         │  • Delete file → remove metadata         │
+                         │                                          │
+                         │  Cognito ←→ DynamoDB:                    │
+                         │  • User ID links to file ownership       │
+                         │  • Access control via userId             │
+                         │                                          │
+                         │  S3 ←→ Cognito:                          │
+                         │  • Presigned URLs use user context       │
+                         │  • File access based on authentication   │
+                         └──────────────────────────────────────────┘
+                                             │
+                                             ▼
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                                                               ┃
+┃  LAYER 7: INFRASTRUCTURE / PLATFORM LAYER                                                    ┃
+┃  Purpose: System Management, Monitoring, Security, Operations                                ┃
+┃                                                                                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
