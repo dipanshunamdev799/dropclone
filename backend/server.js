@@ -3,16 +3,22 @@ const express = require('express');
 const cors = require('cors');
 const AWS = require('aws-sdk');
 const multer = require('multer');
+const { S3Client } = require('@aws-sdk/client-s3');
 const multerS3 = require('multer-s3');
 const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 
 // AWS Configuration
-AWS.config.update({ region: process.env.AWS_REGION });
-const s3 = new AWS.S3();
+const AWS = require('aws-sdk');
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const cognito = new AWS.CognitoIdentityServiceProvider();
+
+// Initialize S3 Client (v3 Style)
+const s3 = new S3Client({
+    region: process.env.AWS_REGION,
+    // Credentials will be loaded automatically from environment variables
+});
 
 // Middleware
 app.use(cors());
